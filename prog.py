@@ -62,7 +62,11 @@ properties = measure.regionprops(labels)
 #properties[i].area && properties[i].perimeter
 print(len(properties))
 
+<<<<<<< HEAD
 '''
+=======
+
+>>>>>>> 4dd1477923c69627c61caa502d19c6eb1517819d
 # display results
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 12), sharex=True, sharey=True, subplot_kw={'adjustable':'box-forced'})
 axes = axes.ravel()
