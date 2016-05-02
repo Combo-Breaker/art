@@ -16,12 +16,12 @@ from matplotlib import colors
 # load the games image
 #img = cv.imread("mem_persist_dali.jpg")
 
-img = io.imread("mem_persist_dali.jpg")
+img = io.imread("Raphael_Galatea.jpg")
 img = cv.GaussianBlur(img, (11,11), 0)
 dst = copy.deepcopy(img) 
 
 spatial_radius = 30
-color_radius = 30
+color_radius = 20
 cv.pyrMeanShiftFiltering(img, spatial_radius, color_radius, dst) 
 
 denoised = rank.median(dst[:, :, 0], disk(2))
@@ -40,7 +40,7 @@ g = graph.rag_mean_color(img, labels)
 
 
 '''
-labels = segmentation.slic(img, compactness=30, n_segments=400)
+labels = segmentation.slic(denoised, compactness=30, n_segments=400)
 g = graph.rag_mean_color(img, labels)
 
 cmap = colors.ListedColormap(['#6599FF', '#ff9900'])
