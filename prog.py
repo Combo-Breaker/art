@@ -26,7 +26,7 @@ cv.pyrMeanShiftFiltering(img, spatial_radius, color_radius, dst)
 
 denoised = rank.median(dst[:, :, 0], disk(2))
 
-
+'''
 # find continuous region (low gradient -
 # where less than 10 for this image) --> markers
 # disk(5) is used here to get a more smooth image
@@ -38,43 +38,48 @@ labels = watershed(gradient, markers)
 #labels = segmentation.slic(denoised, compactness=15, n_segments=300)
 g = graph.rag_mean_color(img, labels)
 
-cmap = colors.ListedColormap(['#6599FF', '#ff9900'])
-out = graph.draw_rag(labels, g, img, colormap = cmap)
-
 
 '''
-plt.figure()
-plt.title("RAG with all edges shown in green.")
-plt.imshow(labels)
+labels = segmentation.slic(img, compactness=30, n_segments=400)
+g = graph.rag_mean_color(img, labels)
+
+cmap = colors.ListedColormap(['#6599FF', '#ff9900'])
+out = graph.draw_rag(labels, g, img, colormap=viridis)
+
+
+plt.imshow(out)
 plt.show()
 
 
 
+'''
 #array with size and perimeter of segmets
 properties = measure.regionprops(labels)
 #properties[i].area && properties[i].perimeter
 print(len(properties))
 
 
-'''
+
 # display results
 fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 12), sharex=True, sharey=True, subplot_kw={'adjustable':'box-forced'})
 axes = axes.ravel()
-ax0, ax1 = axes
+ax0 = axes
 
 ax0.imshow(out, cmap=plt.cm.gray, interpolation='nearest')
 ax0.set_title("Graph")
+
 ax1.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
 ax1.set_title("Segmented")
-'''
+
 ax2.imshow(out, cmap=plt.cm.spectral, interpolation='nearest')
 ax2.set_title("Graph")
 ax3.imshow(img, cmap=plt.cm.gray, interpolation='nearest')
 ax3.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest', alpha=.3)
 ax3.set_title("Segmented")
-'''
+
 for ax in axes:
     ax.axis('off')
 
 fig.tight_layout()
 plt.show()
+'''
