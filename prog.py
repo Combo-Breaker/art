@@ -4,19 +4,24 @@ import matplotlib.pyplot as plt
 import os
 from scipy import ndimage as ndi
 from skimage.morphology import watershed, disk
-from skimage import data, io, measure, segmentation
+from skimage import data, io, measure, segmentation, color
 from skimage.filters import rank
+from skimage.draw import line, set_color
 from skimage.util import img_as_ubyte
 from scipy import misc
 import copy
 from skimage.future import graph
 from skimage.util.colormap import viridis
 from matplotlib import colors
+import networkx as nx
+from skimage.measure import regionprops
+from skimage import draw
+
 
 # load the games image
 #img = cv.imread("mem_persist_dali.jpg")
 
-img = io.imread("Raphael_Galatea.jpg")
+img = io.imread("coins.jpg")
 img = cv.GaussianBlur(img, (11,11), 0)
 dst = copy.deepcopy(img) 
 
@@ -35,22 +40,32 @@ markers = ndi.label(markers)[0]
 # local gradient (disk(2) is used to keep edges thin)
 gradient = rank.gradient(denoised, disk(2))
 labels = watershed(gradient, markers)
-#labels = segmentation.slic(denoised, compactness=15, n_segments=300)
-g = graph.rag_mean_color(img, labels)
+'''
 
+labels = segmentation.slic(denoised, compactness=1, n_segments=40)
+print(labels)
+
+#markers = rank.gradient(denoised, disk(5)) < 10
+#markers = ndi.label(markers)[0]
+# local gradient (disk(2) is used to keep edges thin)
+#gradient = rank.gradient(denoised, disk(2))
+#labels = watershed(gradient, markers)
 
 '''
-labels = segmentation.slic(denoised, compactness=30, n_segments=400)
-g = graph.rag_mean_color(img, labels)
-
-cmap = colors.ListedColormap(['#6599FF', '#ff9900'])
-out = graph.draw_rag(labels, g, img, colormap=viridis)
-
-
-plt.imshow(out)
-plt.show()
-
-
+s = graph.rag_mean_color(img, labels)
+tr = 
+g = graph.merge_hierarchical(labels, s, tr)
+cmap = colors.ListedColormap(['blue', 'red'])
+out = graph.draw_rag(labels, g, img, colormap=cmap)
+#print(g.nodes())
+'''
+'''
+rr, cc = line (585, 587, 516, 518)
+set_color(labels, (rr, cc), 0)
+print(ndi.measurements.center_of_mass(labels))
+'''
+#plt.imshow(out)
+#plt.show()
 
 '''
 #array with size and perimeter of segmets
