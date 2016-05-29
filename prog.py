@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import cv2 as cv
+import matplotlib
 import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from skimage.morphology import watershed, disk
@@ -16,6 +17,8 @@ from matplotlib import colors
 import networkx as nx
 from skimage.measure import regionprops
 from skimage import draw
+import struct
+
 
 def dist(x, y):
 	return (np.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2))
@@ -33,6 +36,11 @@ def similar_colors(c1, c2, tr): #color1, color2, treshold
 		return True
 	else:
 		return False
+
+def to_hex(rgb): #from rgb to hex
+	res = '#%02x%02x%02x' % (rgb[0], rgb[1], rgb[2])
+	return res
+
 
 img = io.imread("Raphael_Galatea.jpg")
 #img = io.imread("sportsmen.jpg")
@@ -58,7 +66,8 @@ for j in range (len(regions)):
 	color = img[coords[0], coords[1]]
 	i = 0	
 	for c in palette:
-		if similar_colors(c, color, 10):
+		if similar_colors(c, color, 30):
+			i += 1
 			break
 	if i == 0:
 		palette.append(color)
@@ -135,3 +144,20 @@ def show_img(img):
 #edges_drawn = display_edges(label_rgb, rag)
 #show_img(edges_drawn)
 
+fig = plt.figure()
+ax = fig.add_subplot(111)
+i = 0
+j = 0
+rect = []
+for c in palette:
+	rect.append(matplotlib.patches.Rectangle((i,j), 70, 70, color=to_hex(c)))
+	i += 70
+	if (i >= 600):
+		i = 0
+		j += 70
+	
+for r in rect:
+	ax.add_patch(r)
+plt.xlim([0, 1000])
+plt.ylim([0, 1000])
+plt.show()
