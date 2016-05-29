@@ -17,7 +17,6 @@ import networkx as nx
 from skimage.measure import regionprops
 from skimage import draw
 
-
 def dist(x, y):
 	return (np.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2))
 
@@ -45,7 +44,8 @@ regions = regionprops(labels)
 # Returns  region properties such as area (number of pixels of region), centroid (centroid coordinate tuple [row, col]),
 
 
-reg_distances = [None] * len(regions)
+
+reg_distances = [[0 for x in range(2)] for y in range(len(regions))] 
 i = -1
 for r in regions:
 	s = 0
@@ -53,16 +53,24 @@ for r in regions:
 	for t in regions:
 		if (t != r):
 			s += D(r, t, img)
-	reg_distances[i] = s
-
-
+			reg_distances[i][0] = s
+			x = int(t.centroid[0])
+			y = int(t.centroid[1])
+			color = img[x, y]
+			reg_distances[i][1] = color
 
 '''
+print(reg_distances[1:6])
+print(reg_distances[100:106])
+'''
+
+
 label_rgb = color.label2rgb(labels, img, kind='avg')
 
 label_rgb = segmentation.mark_boundaries(label_rgb, labels, (0, 0, 0))
 
 rag = graph.rag_mean_color(img, labels)
+
 
 for region in regions:
     rag.node[region['label']]['centroid'] = region['centroid']
@@ -131,4 +139,4 @@ edges_drawn = display_edges(label_rgb, rag)
 show_img(edges_drawn)
 plt.figure(figsize = (12,8))
 plt.show()
-'''
+
