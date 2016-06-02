@@ -42,13 +42,15 @@ def to_hex(rgb): #from rgb to hex
 	return res
 
 
-img = io.imread("Raphael_Galatea.jpg")
-#img = io.imread("sportsmen.jpg")
-#img = io.imread("interior.jpg")
+#img = io.imread("Raphael_Galatea.jpg")
+img = io.imread("cube.jpg")
+#img = io.imread("mem_persist_dali.jpg")
+#img = io.imread("love_tizian.jpg")
+#img = io.imread("2.jpg")
 
 img = cv.GaussianBlur(img, (11,11), 0)
 
-labels = segmentation.slic(img, compactness=10, n_segments=400) 
+labels = segmentation.slic(img, compactness=10, n_segments=200) 
 #compactness depends on the level of contrast Galatea (10). Sportsmen(30)
 labels = labels + 1  # So that no labelled region is 0 and ignored by regionprops
 regions = regionprops(labels) 
@@ -58,65 +60,59 @@ regions = regionprops(labels)
 palette = []
 palette.append(img[regions[0].centroid[0], regions[0].centroid[1]])
 
-
 #getting the image palette
 for j in range (len(regions)):
 	reg = regions[j]
 	coords = reg.centroid
-	color = img[coords[0], coords[1]]
+	clr = img[coords[0], coords[1]]
 	i = 0	
 	for c in palette:
-		if similar_colors(c, color, 30):
+		if similar_colors(c, clr, 30):
 			i += 1
 			break
 	if i == 0:
-		palette.append(color)
-
-print(len(palette))
-
-
+		palette.append(clr)
 '''
-reg_distances = [None] * len(regions)
-i = -1
-for seg1 in regions:
-	s = 0
-	i += 1
-	for seg2 in regions:
-		if (seg2 != seg1):
-			s += Distance(seg1, seg2, img)
-	reg_distances[i] = s
+palette_distance = [0] * len(palette)
+for i in range(len(palette)):
+	c = palette[i]
+	for reg1 in regions:
+		coords = reg1.centroid
+		clr = img[coords[0], coords[1]]
+		if similar_colors(c, clr, 30):
+			for reg2 in regions:
+				if reg1 != reg2:
+					palette_distance[i] += Distance(reg1, reg2, img)
+
+print(palette_distance[:10:])
 '''
-#print(reg_distances[:10:])
-#print(reg_distances[50:90:])
 
-
-
-'''
 label_rgb = color.label2rgb(labels, img, kind='avg')
 label_rgb = segmentation.mark_boundaries(label_rgb, labels, (0, 0, 0))
 rag = graph.rag_mean_color(img, labels)
 for region in regions:
     rag.node[region['label']]['centroid'] = region['centroid']
-'''
+
+#the left side is more calm
+height, width, channels = img.shape
+image_area = height*width
+left = 0
+right = 0
+for reg in regions:
+	coords = reg.centroid
+	s = ((reg.area)/image_area)
+	if (coords[1] <= width/2):
+		left += s * (img[coords[0], coords[1]][0] * 0.3 + img[coords[0], coords[1]][1] * 0.59 + img[coords[0], coords[1]][2] * 0.11)
+	else:
+		right += s * (img[coords[0], coords[1]][0] * 0.3 + img[coords[0], coords[1]][1] * 0.59 + img[coords[0], coords[1]][2] * 0.11)
+
+print(left, right)
+
+
 
 
 
 def display_edges(image, g,):
-    """Draw edges of a RAG on its image
-    Returns a modified image with the edges drawn.Edges are drawn in green
-    and nodes are drawn in yellow.
-    Parameters
-    ----------
-    image : ndarray
-        The image to be drawn on.
-    g : RAG
-        The Region Adjacency Graph.
-    threshold : float
-        Only edges in `g` below `threshold` are drawn.
-    Returns:
-    out: ndarray
-        Image with the edges drawn.
-    """
     image = image.copy()
     for edge in g.edges_iter():
     	n1, n2 = edge
@@ -141,9 +137,11 @@ def show_img(img):
 
 #px = img[700, 3]
 #print("COLOR ", px)
-#edges_drawn = display_edges(label_rgb, rag)
-#show_img(edges_drawn)
+edges_drawn = display_edges(label_rgb, rag)
+show_img(edges_drawn)
 
+print(len(palette))
+#draw the palette
 fig = plt.figure()
 ax = fig.add_subplot(111)
 i = 0
