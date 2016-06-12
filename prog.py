@@ -18,6 +18,7 @@ import networkx as nx
 from skimage.measure import regionprops
 from skimage import draw
 import struct
+from os import listdir
 
 
 def dist(x, y):
@@ -41,121 +42,140 @@ def to_hex(rgb): #from rgb to hex
 	res = '#%02x%02x%02x' % (rgb[0], rgb[1], rgb[2])
 	return res
 
-
-#img = io.imread("Raphael_Galatea.jpg")
-img = io.imread("cube.jpg")
-#img = io.imread("mem_persist_dali.jpg")
-#img = io.imread("love_tizian.jpg")
-#img = io.imread("2.jpg")
-
-img = cv.GaussianBlur(img, (11,11), 0)
-
-labels = segmentation.slic(img, compactness=10, n_segments=200) 
-#compactness depends on the level of contrast Galatea (10). Sportsmen(30)
-labels = labels + 1  # So that no labelled region is 0 and ignored by regionprops
-regions = regionprops(labels) 
-# Returns  region properties such as area (number of pixels of region), centroid (centroid coordinate tuple [row, col]),
-
-
-palette = []
-palette.append(img[regions[0].centroid[0], regions[0].centroid[1]])
-
-#getting the image palette
-for j in range (len(regions)):
-	reg = regions[j]
-	coords = reg.centroid
-	clr = img[coords[0], coords[1]]
-	i = 0	
-	for c in palette:
-		if similar_colors(c, clr, 30):
-			i += 1
-			break
-	if i == 0:
-		palette.append(clr)
-'''
-palette_distance = [0] * len(palette)
-for i in range(len(palette)):
-	c = palette[i]
-	for reg1 in regions:
-		coords = reg1.centroid
-		clr = img[coords[0], coords[1]]
-		if similar_colors(c, clr, 30):
-			for reg2 in regions:
-				if reg1 != reg2:
-					palette_distance[i] += Distance(reg1, reg2, img)
-
-print(palette_distance[:10:])
-'''
-
-label_rgb = color.label2rgb(labels, img, kind='avg')
-label_rgb = segmentation.mark_boundaries(label_rgb, labels, (0, 0, 0))
-rag = graph.rag_mean_color(img, labels)
-for region in regions:
-    rag.node[region['label']]['centroid'] = region['centroid']
-
-#the left side is more calm
-height, width, channels = img.shape
-image_area = height*width
-left = 0
-right = 0
-for reg in regions:
-	coords = reg.centroid
-	s = ((reg.area)/image_area)
-	if (coords[1] <= width/2):
-		left += s * (img[coords[0], coords[1]][0] * 0.3 + img[coords[0], coords[1]][1] * 0.59 + img[coords[0], coords[1]][2] * 0.11)
+def to_hsv(rgb):
+	maximum = max(rgb[0], rgb[1], rgb[2])/255
+	minimum = min(rgb[0], rgb[1], rgb[2])/255
+	if maximum == 0:
+		s = 0
 	else:
-		right += s * (img[coords[0], coords[1]][0] * 0.3 + img[coords[0], coords[1]][1] * 0.59 + img[coords[0], coords[1]][2] * 0.11)
-
-print(left, right)
-
-
+		s = 1 - minimum/maximum
+	res = [s, maximum]
+	return res
 
 
+files = listdir("pic/raphael")
+for l in files:
+	s = "pic/raphael/"
+	s += str(l)
+	print(s)
+	#img = io.imread("Raphael_Galatea.jpg")
+	img = io.imread(s)
+	#img = color.rgb2hsv(img)
+	#img = io.imread("mem_persist_dali.jpg")
+	#img = io.imread("love_tizian.jpg")
+	#img = io.imread("2.jpg")
 
-def display_edges(image, g,):
-    image = image.copy()
-    for edge in g.edges_iter():
-    	n1, n2 = edge
-        r1, c1 = map(int, rag.node[n1]['centroid'])
-        r2, c2 = map(int, rag.node[n2]['centroid'])
-        line  = draw.line(r1, c1, r2, c2)
-        circle = draw.circle(r1,c1,2)
-        weight_int = g.node[n1]['mean color'].astype(int) - g.node[n2]['mean color'].astype(int)
-        weight_int = np.linalg.norm(weight_int)
-        weight_double = g[n1][n2]['weight']
-    	if weight_int > 30 and weight_double < 30 :            
-            image[line] = 0,1,0
-        image[circle] = 1,1,0
-    return image
+	img = cv.GaussianBlur(img, (11,11), 0)
 
-def show_img(img):
-    width = 10.0
-    height = img.shape[0]*width/img.shape[1]
-    f = plt.figure(figsize=(width, height))
-    plt.imshow(img)
-    plt.show()
+	labels = segmentation.slic(img, compactness=10, n_segments=200) 
+	#compactness depends on the level of contrast Galatea (10). Sportsmen(30)
+	labels = labels + 1  # So that no labelled region is 0 and ignored by regionprops
+	regions = regionprops(labels) 
+	# Returns  region properties such as area (number of pixels of region), centroid (centroid coordinate tuple [row, col]),
 
-#px = img[700, 3]
-#print("COLOR ", px)
-edges_drawn = display_edges(label_rgb, rag)
-show_img(edges_drawn)
+	'''
+	palette = []
+	palette.append(img[regions[0].centroid[0], regions[0].centroid[1]])
 
-print(len(palette))
-#draw the palette
-fig = plt.figure()
-ax = fig.add_subplot(111)
-i = 0
-j = 0
-rect = []
-for c in palette:
-	rect.append(matplotlib.patches.Rectangle((i,j), 70, 70, color=to_hex(c)))
-	i += 70
-	if (i >= 600):
-		i = 0
-		j += 70
+	#getting the image palette
+	for j in range (len(regions)):
+		reg = regions[j]
+		coords = reg.centroid
+		clr = img[coords[0], coords[1]]
+		i = 0	
+		for c in palette:
+			if similar_colors(c, clr, 30):
+				i += 1
+				break
+		if i == 0:
+			palette.append(clr)
+
 	
-for r in rect:
-	ax.add_patch(r)
-plt.xlim([0, 1000])
-plt.ylim([0, 1000])
-plt.show()
+
+	for i in range(len(palette)):
+		c = palette[i]
+		for reg1 in regions:
+			coords = reg1.centroid
+			clr = img[coords[0], coords[1]]
+			if similar_colors(c, clr, 30):
+				for reg2 in regions:
+					if reg1 != reg2:
+						palette_distance[i] += Distance(reg1, reg2, img)
+
+	
+	'''
+	label_rgb = color.label2rgb(labels, img, kind='avg')
+	label_rgb = segmentation.mark_boundaries(label_rgb, labels, (0, 0, 0))
+	rag = graph.rag_mean_color(img, labels)
+	for region in regions:
+	    rag.node[region['label']]['centroid'] = region['centroid']
+	
+	#the left side is more calm
+	height, width, channels = img.shape
+	image_area = height*width
+	left_saturation = 0
+	left_brightness = 0
+	right_saturation = 0
+	right_brightness = 0
+	
+	for reg in regions:
+		coords = reg.centroid
+		s = ((reg.area)/image_area)
+		if (coords[1] <= width/2):
+			left_saturation  += s * (to_hsv(img[coords[0], coords[1]])[0])
+			left_brightness += s * (to_hsv(img[coords[0], coords[1]])[1])
+		else:
+			right_saturation  += s * (to_hsv(img[coords[0], coords[1]])[0])
+			right_brightness += s * (to_hsv(img[coords[0], coords[1]])[1])
+
+	print("saturation: ", left_saturation*100, right_saturation*100)
+	print("brightness: ", left_brightness*100, right_brightness*100)
+	'''
+	def display_edges(image, g,):
+	    image = image.copy()
+	    for edge in g.edges_iter():
+	    	n1, n2 = edge
+	        r1, c1 = map(int, rag.node[n1]['centroid'])
+	        r2, c2 = map(int, rag.node[n2]['centroid'])
+	        line  = draw.line(r1, c1, r2, c2)
+	        circle = draw.circle(r1,c1,2)
+	        weight_int = g.node[n1]['mean color'].astype(int) - g.node[n2]['mean color'].astype(int)
+	        weight_int = np.linalg.norm(weight_int)
+	        weight_double = g[n1][n2]['weight']
+	    	if weight_int > 30 and weight_double < 30 :            
+	            image[line] = 0,1,0
+	        image[circle] = 1,1,0
+	    return image
+	
+	def show_img(img):
+	    width = 10.0
+	    height = img.shape[0]*width/img.shape[1]
+	    f = plt.figure(figsize=(width, height))
+	    plt.imshow(img)
+	    plt.show()
+
+	#px = img[700, 3]
+	#print("COLOR ", px)
+	edges_drawn = display_edges(label_rgb, rag)
+	show_img(edges_drawn)
+	'''
+	'''
+	#draw the palette
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	i = 0
+	j = 0
+	rect = []
+	for c in palette:
+		rect.append(matplotlib.patches.Rectangle((i,j), 70, 70, color=to_hex(c)))
+		i += 70
+		if (i >= 600):
+			i = 0
+			j += 70
+		
+	for r in rect:
+		ax.add_patch(r)
+	plt.xlim([0, 1000])
+	plt.ylim([0, 1000])
+	plt.show()
+	'''
