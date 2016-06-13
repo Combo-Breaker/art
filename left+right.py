@@ -21,26 +21,11 @@ import struct
 from os import listdir
 
 
-def dist(x, y):
-	return (np.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2))
-
-def Distance(seg1, seg2, img): #from seg1 to others
-	height, width, channels = img.shape
-	image_area = height*width
-	S = ((seg2.area)/image_area)
-	distance = dist(seg1.centroid, seg2.centroid)
-	res = 1 - (distance*S)/np.sqrt(height**2 + width**2)
-	return(res) 
-
 def similar_colors(c1, c2, tr): #color1, color2, treshold
 	if np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2 + (c1[2] - c2[2])**2) < tr :
 		return True
 	else:
 		return False
-
-def to_hex(rgb): #from rgb to hex
-	res = '#%02x%02x%02x' % (rgb[0], rgb[1], rgb[2])
-	return res
 
 def to_hsv(rgb):
 	maximum = max(rgb[0], rgb[1], rgb[2])/255
@@ -53,18 +38,12 @@ def to_hsv(rgb):
 	return res
 
 
-files = listdir("pic/raphael")
+files = listdir("pic/Renaissance")
 for l in files:
-	s = "pic/raphael/"
+	s = "pic/Renaissance/"
 	s += str(l)
 	print(s)
-	#img = io.imread("Raphael_Galatea.jpg")
 	img = io.imread(s)
-	#img = color.rgb2hsv(img)
-	#img = io.imread("mem_persist_dali.jpg")
-	#img = io.imread("love_tizian.jpg")
-	#img = io.imread("2.jpg")
-
 	img = cv.GaussianBlur(img, (11,11), 0)
 
 	labels = segmentation.slic(img, compactness=10, n_segments=200) 
@@ -89,21 +68,8 @@ for l in files:
 				break
 		if i == 0:
 			palette.append(clr)
-
-	
-
-	for i in range(len(palette)):
-		c = palette[i]
-		for reg1 in regions:
-			coords = reg1.centroid
-			clr = img[coords[0], coords[1]]
-			if similar_colors(c, clr, 30):
-				for reg2 in regions:
-					if reg1 != reg2:
-						palette_distance[i] += Distance(reg1, reg2, img)
-
-	
 	'''
+
 	label_rgb = color.label2rgb(labels, img, kind='avg')
 	label_rgb = segmentation.mark_boundaries(label_rgb, labels, (0, 0, 0))
 	rag = graph.rag_mean_color(img, labels)
@@ -113,23 +79,32 @@ for l in files:
 	#the left side is more calm
 	height, width, channels = img.shape
 	image_area = height*width
-	left_saturation = 0
-	left_brightness = 0
-	right_saturation = 0
-	right_brightness = 0
-	
+	left_saturation = []
+	left_brightness = []
+	right_saturation = []
+	right_brightness = []
+	left_s = 0
+	left_b = 0
+	right_s = 0
+	right_b = 0
 	for reg in regions:
 		coords = reg.centroid
 		s = ((reg.area)/image_area)
 		if (coords[1] <= width/2):
-			left_saturation  += s * (to_hsv(img[coords[0], coords[1]])[0])
-			left_brightness += s * (to_hsv(img[coords[0], coords[1]])[1])
+			left_s  += s * (to_hsv(img[coords[0], coords[1]])[0])
+			left_b += s * (to_hsv(img[coords[0], coords[1]])[1])
 		else:
-			right_saturation  += s * (to_hsv(img[coords[0], coords[1]])[0])
-			right_brightness += s * (to_hsv(img[coords[0], coords[1]])[1])
+			right_s  += s * (to_hsv(img[coords[0], coords[1]])[0])
+			right_b += s * (to_hsv(img[coords[0], coords[1]])[1])
 
-	print("saturation: ", left_saturation*100, right_saturation*100)
-	print("brightness: ", left_brightness*100, right_brightness*100)
+	#print("saturation: ", left_saturation*100, right_saturation*100)
+	#print("brightness: ", left_brightness*100, right_brightness*100)
+	left_saturation.append(left_s*100)
+	left_brightness.append(left_b*100)
+	right_brightness.append(right_b*100)
+	right_saturation.append(right_s*100)
+
+
 	'''
 	def display_edges(image, g,):
 	    image = image.copy()
@@ -158,8 +133,8 @@ for l in files:
 	#print("COLOR ", px)
 	edges_drawn = display_edges(label_rgb, rag)
 	show_img(edges_drawn)
-	'''
-	'''
+	
+
 	#draw the palette
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
@@ -179,3 +154,5 @@ for l in files:
 	plt.ylim([0, 1000])
 	plt.show()
 	'''
+print("rs", right_saturation, "rb", right_brightness)
+print("ls", left_saturation, "lb", left_brightness)

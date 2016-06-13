@@ -20,18 +20,6 @@ from skimage import draw
 import struct
 from os import listdir
 
-
-def dist(x, y):
-	return (np.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2))
-
-def Distance(seg1, seg2, img): #from seg1 to others
-	height, width, channels = img.shape
-	image_area = height*width
-	S = ((seg2.area)/image_area)
-	distance = dist(seg1.centroid, seg2.centroid)
-	res = 1 - (distance*S)/np.sqrt(height**2 + width**2)
-	return(res) 
-
 def similar_colors(c1, c2, tr): #color1, color2, treshold
 	if (c1[0] - c2[0])**2 < tr and  (c1[1] - c2[1])**2 < tr and  (c1[2] - c2[2])**2 < tr :
 		return True
@@ -39,11 +27,14 @@ def similar_colors(c1, c2, tr): #color1, color2, treshold
 		return False
 
 
-files = listdir("pic/raphael")
+files = listdir("pic/Expressionism")
+res = 0
+f = open('exp', 'w')
 for l in files:
-	s = "pic/raphael/"
+	s = "pic/Expressionism/"
 	s += str(l)
 	print(s)
+	f.write(s + '	')
 	img = io.imread(s)
 
 	img = cv.GaussianBlur(img, (11,11), 0)
@@ -93,11 +84,13 @@ for l in files:
 			if (flag1 and flag2):
 				disharmony += 1	
 
-	    
-	    
 
-	print(harmony)
-	print(disharmony)
+	p = (harmony/(disharmony+harmony))*100
+	res += harmony/(disharmony+harmony)*100
+	f.write(str(p))
+	f.write("\n")
+f.write(res/len(files))
+f.close()
 
 
 
